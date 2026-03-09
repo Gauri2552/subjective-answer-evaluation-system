@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Results{% endblock title %}
+{% block body %}
+
+{% if user.is_authenticated %}
+<section class="row p-5">
+  <div class="d-flex mx-auto shadow w-75 p-0 border border-dark border-2 mt-5">
+    <div class="row col-lg-12 p-5 mb-5">
+      <h1 class="text-center" style="font-style: italic;">Results</h1>
+      <div class="col-lg-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Questions</th>
+              <th scope="col">Answers</th>
+              <th scope="col">Total Marks</th>
+              <th scope="col">Predivted Marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in final_result %}
+            <tr>
+              {% for i in result %}
+              <td>{{i}}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="height: 400px;">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var totalMarks = 0;
+  var predictedMarks = 0;
+
+  {% for result in final_result %}
+  totalMarks += {{ result.2 }};
+  predictedMarks += {{ result.3 }};
+  {% endfor %}
+
+  var totalPercentage = 100;
+  var predictedPercentage = (predictedMarks / totalMarks) * totalPercentage;
+
+  var ctx = document.getElementById('pieChart').getContext('2d');
+  var pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Total Percentage', 'Predicted Percentage'],
+      datasets: [{
+        data: [totalPercentage, predictedPercentage],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.5)',
+          'rgba(54, 162, 235, 0.5)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      title: {
+        display: true,
+        text: 'Total Marks vs Predicted Marks'
+      },
+      tooltips: {
+        callbacks: {
+          label: function (tooltipItem, data) {
+            var label = data.labels[tooltipItem.index];
+            var value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+            return label + ': ' + value + '%';
+          }
+        }
+      },
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          fontColor: 'rgb(0, 0, 0)'
+        }
+      }
+    }
+  });
+
+  // Append total marks and predicted marks below the pie chart
+  var pieChartLegend = document.getElementById('pieChart').parentNode;
+  var totalMarksText = document.createElement('p');
+  totalMarksText.textContent = 'Total Marks: ' + totalMarks;
+  pieChartLegend.appendChild(totalMarksText);
+
+  var predictedMarksText = document.createElement('p');
+  predictedMarksText.textContent = 'Marks Obtained: ' + predictedMarks;
+  pieChartLegend.appendChild(predictedMarksText);
+</script>
+{% endif %}
+{% endblock body %}
